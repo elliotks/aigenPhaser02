@@ -75,6 +75,39 @@ function create() {
   });
 }
 
+
+this.socket.on('chatMessage', function (chatData) {
+  self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+    if (chatData.playerId === otherPlayer.playerId) {
+      // Assuming otherPlayer.label is a Phaser Text object initialized earlier
+      otherPlayer.label.setText(chatData.message);
+      // Clear the message after a delay
+      setTimeout(() => {
+        otherPlayer.label.setText('');
+      }, 2000);
+    }
+  });
+});
+
+// Capture keyboard input
+this.input.keyboard.on('keydown', function (event) {
+  if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.ENTER) {
+    // When the ENTER key is pressed, send the chat message
+    self.socket.emit('chatMessage', inputText);
+    inputText = '';
+  } else if (event.keyCode === Phaser.Input.Keyboard.KeyCodes.BACKSPACE) {
+    // The last character is removed when the BACKSPACE key is pressed
+    inputText = inputText.substr(0, inputText.length - 1);
+  } else {
+    // Otherwise, add the typed character to the input text
+    // Note: This only allows alphanumeric characters and space
+    var letter = String.fromCharCode(event.keyCode);
+    if (/^[a-zA-Z0-9 ]$/.test(letter)) {
+      inputText += letter;
+    }
+  }
+});
+
 function addPlayer(self, playerInfo) {
   self.ship = self.physics.add.image(playerInfo.x, playerInfo.y, 'ship').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
   if (playerInfo.team === 'blue') {
@@ -85,6 +118,7 @@ function addPlayer(self, playerInfo) {
   self.ship.setDrag(100);
   self.ship.setAngularDrag(100);
   self.ship.setMaxVelocity(200);
+  self.ship.label = self.add.text(playerInfo.x, playerInfo.y - 20, '', { fontSize: '16px', fill: '#FFFFFF' });
 }
 
 function addOtherPlayers(self, playerInfo) {
@@ -95,6 +129,7 @@ function addOtherPlayers(self, playerInfo) {
     otherPlayer.setTint(0xff0000);
   }
   otherPlayer.playerId = playerInfo.playerId;
+  otherPlayer.label = self.add.text(playerInfo.x, playerInfo.y - 20, '', { fontSize: '16px', fill: '#FFFFFF' });
   self.otherPlayers.add(otherPlayer);
 }
 
@@ -129,5 +164,16 @@ function update() {
       y: this.ship.y,
       rotation: this.ship.rotation
     };
+
+    // Update the position of the label to stay above the player's ship
+    //if (this.ship) {
+      this.ship.label.setX(this.ship.x);
+      this.ship.label.setY(this.ship.y - 20);
+    //}
+    this.otherPlayers.getChildren().forEach(function (otherPlayer) {
+      otherPlayer.label.setX(otherPlayer.x);
+      otherPlayer.label.setY(otherPlayer.y - 20);
+    });
+
   }
 }
