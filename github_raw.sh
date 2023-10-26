@@ -1,5 +1,5 @@
 #!/bin/bash
-https://raw.githubusercontent.com/elliotks/aigenPhaser02/main/package.json
+
 REPO="https://raw.githubusercontent.com/elliotks/aigenPhaser02"
 BRANCH="main"
 BASE_URL="$REPO/$BRANCH"
